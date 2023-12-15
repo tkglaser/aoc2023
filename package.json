@@ -17,11 +17,13 @@
   "devDependencies": {
     "@types/node": "^16.11.6",
     "@types/pegjs": "^0.10.6",
+    "@types/progress": "^2.0.7",
     "aocrunner": "^1.9.6",
     "prettier": "^2.8.0"
   },
   "dependencies": {
-    "pegjs": "^0.10.0"
+    "pegjs": "^0.10.0",
+    "progress": "^2.0.3"
   },
   "engines": {
     "node": ">=16.13.0"
