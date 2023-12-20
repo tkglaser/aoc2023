@@ -59,6 +59,81 @@ const sum = (n: number[]) => n.reduce((prev, curr) => prev + curr, 0);
 
 const score = (p: Part[]) => sum(p.map(partScore));
 
+type Volume = {
+  min: [number, number, number, number];
+  max: [number, number, number, number];
+};
+
+const volIdx = {
+  x: 0,
+  m: 1,
+  a: 2,
+  s: 3,
+};
+
+const deepCopy = <T>(val: T): T => JSON.parse(JSON.stringify(val));
+
+function split(r: ConditionalRule, volume: Volume) {
+  const inside = deepCopy(volume);
+  const outside = deepCopy(volume);
+  const dim = volIdx[r.cat];
+  if (r.op === "<") {
+    inside.max[dim] = r.val - 1;
+    outside.min[dim] = r.val;
+  } else {
+    inside.min[dim] = r.val + 1;
+    outside.max[dim] = r.val;
+  }
+  return { inside, outside };
+}
+
+function calcVol(v: Volume) {
+  return (
+    (v.max[0] - v.min[0] + 1) *
+    (v.max[1] - v.min[1] + 1) *
+    (v.max[2] - v.min[2] + 1) *
+    (v.max[3] - v.min[3] + 1)
+  );
+}
+
+function calcHypercubeVolumes(workflows: WorkflowMap) {
+  let total = 0;
+  const traverse = (node: string, volume: Volume) => {
+    const wf = workflows[node];
+    let vol = volume;
+    for (const rule of wf.rules) {
+      if (isConditionalRule(rule)) {
+        const { inside, outside } = split(rule, vol);
+        if (isDecision(rule.outcome)) {
+          if (isAccepted(rule.outcome)) {
+            total += calcVol(inside);
+          }
+        } else {
+          // not a decision
+          traverse(rule.outcome, inside);
+        }
+        vol = outside;
+      } else {
+        // unconditional rule
+        if (isDecision(rule.outcome)) {
+          if (isAccepted(rule.outcome)) {
+            // calc and add
+            total += calcVol(vol);
+          }
+        } else {
+          traverse(rule.outcome, vol);
+        }
+      }
+    }
+  };
+
+  traverse("in", {
+    min: [1, 1, 1, 1],
+    max: [4000, 4000, 4000, 4000],
+  });
+  return total;
+}
+
 const part1 = (rawInput: string) => {
   const input = parse(rawInput);
 
@@ -68,16 +143,13 @@ const part1 = (rawInput: string) => {
 };
 
 const part2 = (rawInput: string) => {
-  const input = parse(rawInput);
+  const { workflows } = parse(rawInput);
 
-  return;
+  const vols = calcHypercubeVolumes(workflows);
+  return vols;
 };
 
-run({
-  part1: {
-    tests: [
-      {
-        input: `px{a<2006:qkq,m>2090:A,rfg}
+const input = `px{a<2006:qkq,m>2090:A,rfg}
 pv{a>1716:R,A}
 lnx{m>1548:A,A}
 rfg{s<537:gd,x>2440:R,A}
@@ -93,7 +165,13 @@ hdj{m>838:A,pv}
 {x=1679,m=44,a=2067,s=496}
 {x=2036,m=264,a=79,s=2244}
 {x=2461,m=1339,a=466,s=291}
-{x=2127,m=1623,a=2188,s=1013}`,
+{x=2127,m=1623,a=2188,s=1013}`;
+
+run({
+  part1: {
+    tests: [
+      {
+        input,
         expected: 19114,
       },
     ],
@@ -101,10 +179,10 @@ hdj{m>838:A,pv}
   },
   part2: {
     tests: [
-      // {
-      //   input: ``,
-      //   expected: "",
-      // },
+      {
+        input,
+        expected: 167409079868000,
+      },
     ],
     solution: part2,
   },
