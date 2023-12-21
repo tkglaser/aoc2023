@@ -3,13 +3,13 @@ import run from "aocrunner";
 import { Grid } from "../utils/grid.js";
 
 const part1 = (rawInput: string) => {
-  const input = Grid.fromText(rawInput, (t) => +t);
+  const input = Grid.fromText(rawInput, { repeats: false }, (t) => +t);
 
   return;
 };
 
 const part2 = (rawInput: string) => {
-  const input = Grid.fromText(rawInput, (t) => +t);
+  const input = Grid.fromText(rawInput, { repeats: false }, (t) => +t);
 
   return;
 };

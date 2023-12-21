@@ -61,7 +61,7 @@ function trace(grid: MirrorGrid, r: Ray): { beam: Beam; children: Ray[] } {
   let bounce = false;
   do {
     pos = pos.add(dirMap[r.direction]);
-    const tile = grid.tileAt(pos, "#");
+    const tile = grid.tile(pos, "#");
     if (tile !== ".") {
       bounce = true;
     }
@@ -104,7 +104,7 @@ function trace(grid: MirrorGrid, r: Ray): { beam: Beam; children: Ray[] } {
   };
 
   const children = childMap[r.direction][
-    grid.tileAt(pos, "#") as Mirror | "#"
+    grid.tile(pos, "#") as Mirror | "#"
   ].map((dir) => ({
     start: pos,
     direction: dir,
@@ -119,12 +119,12 @@ function score(grid: MirrorGrid, beams: Beam[]) {
   for (const beam of beams) {
     let pos = beam.start;
     do {
-      if (grid.tileAt(pos, "#") !== "#") {
+      if (grid.tile(pos, "#") !== "#") {
         fields[pos.hash] = true;
       }
       pos = pos.add(dirMap[beam.direction]);
     } while (pos.line !== beam.end.line || pos.char !== beam.end.char);
-    if (grid.tileAt(pos, "#") !== "#") {
+    if (grid.tile(pos, "#") !== "#") {
       fields[pos.hash] = true;
     }
   }

@@ -5,6 +5,11 @@ export class Coord {
     return new Coord(line, char);
   }
 
+  static fromHash(hash: string) {
+    const [line, char] = hash.split("#").map(Number);
+    return new Coord(line, char);
+  }
+
   add(c: Coord) {
     return new Coord(this.line + c.line, this.char + c.char);
   }
