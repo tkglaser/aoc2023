@@ -1,4 +1,4 @@
-import { VisitResult } from "./graph.js";
+import { VisitResult } from "./visit-result.js";
 
 export function bfs<T>(
   start: T,

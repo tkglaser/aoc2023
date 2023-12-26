@@ -45,21 +45,6 @@ export class Graph {
     return n;
   }
 
-  contract(a: string, b: string, opts: { removeSelfEdges: boolean }) {
-    const newEdges: Edge[] = [];
-    const newVertex = `${a}#${b}`;
-    for (const from of this.vertices) {
-      const newFrom = [a, b].includes(from) ? newVertex : from;
-      for (const [to, value] of Object.entries(this.edgeMap[from])) {
-        const newTo = [a, b].includes(to) ? newVertex : to;
-        if (!opts.removeSelfEdges || newFrom !== newTo)
-          newEdges.push({ from: newFrom, to: newTo, value });
-      }
-    }
-
-    return new Graph(newEdges, { directed: true });
-  }
-
   mark(label: string, vertex: string, value: unknown) {
     if (!this.markMap[label]) {
       this.markMap[label] = {};
@@ -83,4 +68,4 @@ export class Graph {
       .filter(([, v]) => v === value)
       .map(([k]) => k);
   }
-} //  fortnite penis gaming sex if then while loop print hello worlfddd apple micersoft computer iphone iphone iphone iphone iphone
+}

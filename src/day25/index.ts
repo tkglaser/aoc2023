@@ -3,6 +3,7 @@ import run from "aocrunner";
 import { Edge } from "../utils/graph/edge.js";
 import { Graph } from "../utils/graph/graph.js";
 import { ParsingOutput, parse } from "./parser.js";
+import { algorithms } from "../utils/algorithms";
 
 function toGraph(input: ParsingOutput): Graph {
   const edges: Edge[] = [];
@@ -15,31 +16,6 @@ function toGraph(input: ParsingOutput): Graph {
   return new Graph(edges, { directed: false });
 }
 
-function contract(original: Graph, target: number) {
-  let graph = original;
-  do {
-    const edges = graph.edges;
-    const edge = edges[Math.floor(Math.random() * edges.length)];
-    graph = graph.contract(edge.from, edge.to, { removeSelfEdges: true });
-  } while (graph.vertices.length > target);
-  return graph;
-}
-
-// Karger-Stein
-function fastCut(
-  original: Graph,
-  heuristic: (a: Graph, b: Graph) => Graph,
-): Graph {
-  if (original.vertices.length <= 6) {
-    return contract(original, 2);
-  } else {
-    const t = Math.ceil(1 + original.vertices.length / Math.sqrt(2));
-    const a = contract(original, t);
-    const b = contract(original, t);
-    return heuristic(fastCut(a, heuristic), fastCut(b, heuristic));
-  }
-}
-
 const part1 = (rawInput: string) => {
   const input = parse(rawInput);
   const original = toGraph(input);
@@ -47,7 +23,7 @@ const part1 = (rawInput: string) => {
   let graph = original;
   do {
     // graph = contract(original, 2);
-    graph = fastCut(original, (a, b) => {
+    graph = algorithms.minCutKargerStein(original, (a, b) => {
       const scoreA = Math.abs(a.edges[0].value - 3);
       const scoreB = Math.abs(b.edges[0].value - 3);
       return scoreA < scoreB ? a : b;
@@ -98,5 +74,5 @@ frs: qnr lhk lsr`,
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: false,
+  onlyTests: true,
 });
