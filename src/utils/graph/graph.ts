@@ -1,6 +1,7 @@
 import { Edge } from "./edge.js";
+import { IGraph } from "./igraph.js";
 
-export class Graph {
+export class Graph implements IGraph {
   readonly vertices: string[];
   readonly edges: Edge[];
   private readonly edgeMap: Record<string, Record<string, number>> = {};
@@ -67,5 +68,9 @@ export class Graph {
     return Object.entries(this.markMap[label] ?? {})
       .filter(([, v]) => v === value)
       .map(([k]) => k);
+  }
+
+  clearAllMarks(label: string): void {
+    delete this.markMap[label];
   }
 }

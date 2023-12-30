@@ -19,6 +19,35 @@ export class Direction {
     return new Direction("<", Coord.from(0, -1));
   }
 
+  static isUp(a: Coord, b: Coord) {
+    return a.line > b.line;
+  }
+
+  static isDown(a: Coord, b: Coord) {
+    return a.line < b.line;
+  }
+
+  static isRight(a: Coord, b: Coord) {
+    return a.char < b.char;
+  }
+
+  static isLeft(a: Coord, b: Coord) {
+    return a.char > b.char;
+  }
+
+  static of(a: Coord, b: Coord) {
+    if (this.isUp(a, b)) {
+      return this.up;
+    }
+    if (this.isDown(a, b)) {
+      return this.down;
+    }
+    if (this.isLeft(a, b)) {
+      return this.left;
+    }
+    return this.right;
+  }
+
   toString() {
     return this.str;
   }
