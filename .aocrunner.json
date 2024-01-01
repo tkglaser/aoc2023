@@ -245,18 +245,21 @@
     },
     {
       "part1": {
-        "solved": false,
-        "result": "1037",
+        "solved": true,
+        "result": "1004",
         "attempts": [
-          "1037"
+          "1037",
+          "935",
+          "956",
+          "976"
         ],
-        "time": 394.935837
+        "time": 897.139677
       },
       "part2": {
-        "solved": false,
-        "result": null,
+        "solved": true,
+        "result": "1171",
         "attempts": [],
-        "time": null
+        "time": 4417.807551
       }
     },
     {

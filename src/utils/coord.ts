@@ -1,5 +1,12 @@
-export class Coord {
-  private constructor(readonly line: number, readonly char: number) {}
+export interface ICoord {
+  readonly line: number;
+  readonly char: number;
+}
+
+export class Coord implements ICoord {
+  private constructor(readonly line: number, readonly char: number) {
+    Object.freeze(this);
+  }
 
   static from(line: number, char: number) {
     return new Coord(line, char);
@@ -10,8 +17,12 @@ export class Coord {
     return new Coord(line, char);
   }
 
-  add(c: Coord) {
+  add(c: ICoord) {
     return new Coord(this.line + c.line, this.char + c.char);
+  }
+
+  eq(c: ICoord) {
+    return this.line === c.line && this.char === c.char;
   }
 
   get up() {
@@ -28,6 +39,10 @@ export class Coord {
 
   get right() {
     return new Coord(this.line, this.char + 1);
+  }
+
+  get not() {
+    return new Coord(-this.line, -this.char);
   }
 
   get hash() {

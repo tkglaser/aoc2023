@@ -85,6 +85,24 @@ export class Grid<T> {
       .length;
   }
 
+  clearAllMarks(label: string): void {
+    delete this.markMap[label];
+  }
+
+  renderLabel(label: string, cellWidth: number): string {
+    const result = [];
+    for (let line = this.zLine; line < this.lines; ++line) {
+      let l: string[] = [];
+      for (let char = this.zChar; char < this.chars; ++char) {
+        l.push(
+          (this.getMark<number>(label, Coord.from(line, char)) ?? 0).toString(),
+        );
+      }
+      result.push(l.map((s) => s.padStart(cellWidth, " ")).join(" "));
+    }
+    return result.join("\n");
+  }
+
   tile(c: Coord): T | undefined;
   tile(c: Coord, defaultValue: T): T;
   tile(c: Coord, defaultValue?: T) {
