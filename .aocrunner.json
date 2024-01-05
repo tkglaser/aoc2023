@@ -360,13 +360,13 @@
           "34332",
           "600"
         ],
-        "time": 2155.307166
+        "time": 11.017857
       },
       "part2": {
-        "solved": false,
-        "result": null,
+        "solved": true,
+        "result": "580043851566574",
         "attempts": [],
-        "time": null
+        "time": 869.37167
       }
     },
     {

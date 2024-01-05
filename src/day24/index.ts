@@ -1,4 +1,6 @@
 import run from "aocrunner";
+import assert from "assert";
+import { init as initZ3 } from "z3-solver";
 
 import { Line, parse } from "./parser.js";
 
@@ -37,7 +39,6 @@ function countIntersectionsInArea(lines: Line[], bounds: [number, number]) {
           if (
             intersectionPoint.every((c) => bounds[0] <= c && c <= bounds[1])
           ) {
-            console.log(lines[i], lines[j], intersectionPoint);
             intersections++;
           }
         }
@@ -45,6 +46,40 @@ function countIntersectionsInArea(lines: Line[], bounds: [number, number]) {
     }
   }
   return intersections;
+}
+
+export async function getStartingCoordinateSum(hailstones: Line[]) {
+  const { Context } = await initZ3();
+  const { Real, Solver } = Context("main");
+
+  const x = Real.const("x");
+  const y = Real.const("y");
+  const z = Real.const("z");
+
+  const vx = Real.const("vx");
+  const vy = Real.const("vy");
+  const vz = Real.const("vz");
+
+  const solver = new Solver();
+
+  for (const [index, h] of hailstones.slice(0, 3).entries()) {
+    const t = Real.const(`t${index}`);
+
+    solver.add(t.ge(0));
+    solver.add(x.add(vx.mul(t)).eq(t.mul(h.v[0]).add(h.p[0])));
+    solver.add(y.add(vy.mul(t)).eq(t.mul(h.v[1]).add(h.p[1])));
+    solver.add(z.add(vz.mul(t)).eq(t.mul(h.v[2]).add(h.p[2])));
+  }
+
+  const satisfied = await solver.check();
+
+  assert(satisfied === "sat", "Z3 solver unsatisfied");
+
+  const model = solver.model();
+
+  return [model.eval(x), model.eval(y), model.eval(z)]
+    .map(Number)
+    .reduce((prev, curr) => prev + curr, 0);
 }
 
 const part1 = (rawInput: string) => {
@@ -57,7 +92,7 @@ const part1 = (rawInput: string) => {
 const part2 = (rawInput: string) => {
   const input = parse(rawInput);
 
-  return;
+  return getStartingCoordinateSum(input);
 };
 
 run({
