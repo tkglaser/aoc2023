@@ -3,7 +3,7 @@ import run from "aocrunner";
 import { Edge } from "../utils/graph/edge.js";
 import { Graph } from "../utils/graph/graph.js";
 import { ParsingOutput, parse } from "./parser.js";
-import { algorithms } from "../utils/algorithms";
+import { algorithms } from "../utils/algorithms/index.js";
 
 function toGraph(input: ParsingOutput): Graph {
   const edges: Edge[] = [];
