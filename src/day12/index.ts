@@ -1,64 +1,61 @@
 import run from "aocrunner";
+import memoize from "lodash/memoize.js";
 
 import { parse } from "./parser.js";
 
-const countPermutations = (
-  map: string,
-  predicate: (s: string) => boolean,
-): number => {
-  const numberQuestionMarks = map.split("").filter((c) => c === "?").length;
-  const maxCount = 2 ** numberQuestionMarks;
-  let permutationCount = 0;
-
-  console.log(`Testing [${maxCount}] permutations`);
-
-  for (let permDec = 0; permDec < maxCount; ++permDec) {
-    if (permDec % 1000000 === 0) {
-      console.log(
-        `Checking permutation [${permDec}] [${
-          Math.floor(permDec * 100 / maxCount)
-        }%]`,
-      );
-    }
-    const permBin = permDec.toString(2).padStart(numberQuestionMarks, "0");
-    const permutation: string[] = [];
-    let permIdx = 0;
-    for (let i = 0; i < map.length; ++i) {
-      if (map[i] === "?") {
-        permutation[i] = permBin[permIdx] === "0" ? "." : "#";
-        ++permIdx;
-      } else {
-        permutation[i] = map[i];
+const countPermutations = memoize(
+  (map: string, n: number[]): number => {
+    if (map.length === 0) {
+      if (n.length === 0) {
+        return 1; // valid
       }
+      return 0; // invalid
     }
-    const permJoined = permutation.join("");
-    if (predicate(permJoined)) {
-      ++permutationCount;
+
+    const firstChar = map[0];
+    const restMap = map.slice(1);
+
+    if (map.length < sum(n) + n.length - 1) {
+      // the expected strings don't fit
+      return 0;
     }
-  }
 
-  console.log(`[${permutationCount}] permutations are valid`);
+    if (firstChar === ".") {
+      return countPermutations(restMap, n);
+    }
 
-  return permutationCount;
-};
+    if (firstChar === "#") {
+      if (n.length === 0) {
+        return 0; // invalid
+      }
+      // take the first run and run it
+      const firstRun = n[0];
+      for (let i = 0; i < firstRun; ++i) {
+        if (map[i] === ".") {
+          return 0; // invalid
+        }
+      }
+      if (map[firstRun] === "#") {
+        return 0; // invalid
+      }
+      return countPermutations(map.slice(firstRun + 1), n.slice(1));
+    }
 
-const fitsNumbersMap = (n: number[]) => (map: string) => {
-  const runs = map
-    .split(".")
-    .filter((c) => c !== "")
-    .map((c) => c.length);
-
-  return runs.join("#") === n.join("#");
-};
+    // firstChar is ? so count both ways
+    return (
+      countPermutations("#" + restMap, n) + countPermutations("." + restMap, n)
+    );
+  },
+  (map: string, n: number[]) =>
+    `${map}||${n.map((n) => n.toString()).join("#")}`,
+);
 
 const sum = (n: number[]) => n.reduce((prev, curr) => prev + curr, 0);
 
 const part1 = (rawInput: string) => {
   const input = parse(rawInput);
 
-  return sum(
-    input.map((line) => countPermutations(line.m, fitsNumbersMap(line.d))),
-  );
+  return sum(input.map((line) => countPermutations(line.m, line.d)));
 };
 
 const part2 = (rawInput: string) => {
@@ -69,18 +66,15 @@ const part2 = (rawInput: string) => {
     d: [...line.d, ...line.d, ...line.d, ...line.d, ...line.d],
   }));
 
-  return sum(
-    inputExpanded.map((line) =>
-      countPermutations(line.m, fitsNumbersMap(line.d)),
-    ),
-  );
+  return sum(inputExpanded.map((line) => countPermutations(line.m, line.d)));
 };
 
 run({
   part1: {
     tests: [
       {
-        input: `???.### 1,1,3
+        input: `
+???.### 1,1,3
 .??..??...?##. 1,1,3
 ?#?#?#?#?#?#?#? 1,3,1,6
 ????.#...#... 4,1,1
@@ -94,7 +88,8 @@ run({
   part2: {
     tests: [
       {
-        input: `???.### 1,1,3
+        input: `
+???.### 1,1,3
 .??..??...?##. 1,1,3
 ?#?#?#?#?#?#?#? 1,3,1,6
 ????.#...#... 4,1,1
@@ -106,5 +101,5 @@ run({
     solution: part2,
   },
   trimTestInputs: true,
-  onlyTests: true,
+  onlyTests: false,
 });
