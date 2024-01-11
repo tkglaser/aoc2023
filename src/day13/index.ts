@@ -2,21 +2,23 @@ import run from "aocrunner";
 
 import { parse } from "./parser.js";
 
-const lineChecksums = (lines: string[]) =>
-  lines.map((line) => +line.replaceAll(".", "0").replaceAll("#", "1"));
+const asLines = (lines: string[]) => lines;
 
-const colChecksums = (lines: string[]) => {
+const asColumns = (lines: string[]) => {
   const colSums: string[] = [];
   for (let line = 0; line < lines.length; ++line) {
     for (let char = 0; char < lines[0].length; ++char) {
-      const charVal = lines[line][char] === "#" ? "1" : "0";
+      const charVal = lines[line][char];
       colSums[char] = (colSums[char] ?? "") + charVal;
     }
   }
-  return colSums.map(Number);
+  return colSums;
 };
 
-const centers = (allowedDiff: number) => (n: number[]) => {
+const stringDiff = (a: string, b: string) =>
+  a.split("").reduce((prev, curr, idx) => prev + (curr === b[idx] ? 0 : 1), 0);
+
+const centersPart1 = (n: string[]) => {
   let centers = [];
   for (let i = 1; i < n.length; ++i) {
     if (n[i - 1] === n[i]) {
@@ -29,17 +31,56 @@ const centers = (allowedDiff: number) => (n: number[]) => {
     let h = center;
     let l = center - 1;
     let finished = false;
-    let diffCount = 0;
+    let valid = true;
     do {
       if (typeof n[h] === "undefined" || typeof n[l] === "undefined") {
         finished = true;
       } else if (n[l] !== n[h]) {
-        ++diffCount;
+        valid = false;
       }
       --l;
       ++h;
     } while (!finished);
-    if (diffCount == allowedDiff) {
+    if (valid) {
+      confirmedCenters.push(center);
+    }
+  }
+
+  return confirmedCenters;
+};
+
+const centersPart2 = (n: string[]) => {
+  let centers = [];
+  for (let i = 1; i < n.length; ++i) {
+    centers.push(i);
+  }
+
+  let confirmedCenters = [];
+  for (const center of centers) {
+    let h = center;
+    let l = center - 1;
+    let finished = false;
+    let valid = true;
+    let seenSmudge = false;
+    do {
+      if (typeof n[h] === "undefined" || typeof n[l] === "undefined") {
+        finished = true;
+      } else {
+        const diff = stringDiff(n[l], n[h]);
+        if (diff === 1) {
+          if (!seenSmudge) {
+            seenSmudge = true;
+          } else {
+            valid = false;
+          }
+        } else if (diff > 1) {
+          valid = false;
+        }
+      }
+      --l;
+      ++h;
+    } while (!finished);
+    if (valid && seenSmudge) {
       confirmedCenters.push(center);
     }
   }
@@ -53,8 +94,8 @@ const part1 = (rawInput: string) => {
   const input = parse(rawInput);
 
   return (
-    sum(input.map(lineChecksums).flatMap(centers(0))) * 100 +
-    sum(input.map(colChecksums).flatMap(centers(0)))
+    sum(input.map(asLines).flatMap(centersPart1)) * 100 +
+    sum(input.map(asColumns).flatMap(centersPart1))
   );
 };
 
@@ -62,8 +103,8 @@ const part2 = (rawInput: string) => {
   const input = parse(rawInput);
 
   return (
-    sum(input.map(lineChecksums).flatMap(centers(1))) * 100 +
-    sum(input.map(colChecksums).flatMap(centers(1)))
+    sum(input.map(asLines).flatMap(centersPart2)) * 100 +
+    sum(input.map(asColumns).flatMap(centersPart2))
   );
 };
 
@@ -71,7 +112,8 @@ run({
   part1: {
     tests: [
       {
-        input: `#.##..##.
+        input: `
+#.##..##.
 ..#.##.#.
 ##......#
 ##......#
@@ -94,7 +136,8 @@ run({
   part2: {
     tests: [
       {
-        input: `#.##..##.
+        input: `
+#.##..##.
 ..#.##.#.
 ##......#
 ##......#
