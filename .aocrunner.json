@@ -204,15 +204,16 @@
         "solved": true,
         "result": "108759",
         "attempts": [],
-        "time": 130.27223
+        "time": 133.492661
       },
       "part2": {
         "solved": false,
-        "result": "84110",
+        "result": "91605",
         "attempts": [
-          "84110"
+          "84110",
+          "91605"
         ],
-        "time": 217461.287905
+        "time": 124990.372303
       }
     },
     {

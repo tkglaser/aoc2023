@@ -1,139 +1,108 @@
 import run from "aocrunner";
 import ProgressBar from "progress";
 
+import { Grid as UtilGrid } from "../utils/grid.js";
+import { Coord } from "../utils/coord.js";
+import { Direction } from "../utils/direction.js";
+
 const enum Tile {
   Blank = ".",
   Roller = "O",
   Fixed = "#",
 }
 
-class Grid {
-  constructor(
-    private readonly tiles: Record<string, Tile>,
-    private readonly lines: number,
-    private readonly chars: number,
-  ) {}
+type Dish = UtilGrid<Tile>;
 
-  static coordHash(line: number, char: number) {
-    return `${line}#${char}`;
-  }
-
-  static fromInput(input: string) {
-    const tiles: Record<string, Tile> = {};
-    const lines = input.split("\n");
-    for (let l = 0; l < lines.length; ++l) {
-      for (let c = 0; c < lines[0].length; ++c) {
-        const char = lines[l][c];
-        tiles[this.coordHash(l, c)] = char as Tile;
-      }
-    }
-    return new Grid(tiles, lines.length, lines[0].length);
-  }
-
-  tileAt(line: number, char: number) {
-    return this.tiles[Grid.coordHash(line, char)] ?? Tile.Fixed;
-  }
-
-  setTile(line: number, char: number, tile: Tile) {
-    this.tiles[Grid.coordHash(line, char)] = tile;
-  }
-
-  rollCoord(line: number, char: number, dir: { line: number; char: number }) {
-    if (this.tileAt(line, char) !== Tile.Blank) {
-      return false;
-    }
-    if (this.tileAt(line + dir.line, char + dir.char) === Tile.Roller) {
-      this.setTile(line, char, Tile.Roller);
-      this.setTile(line + dir.line, char + dir.char, Tile.Blank);
-      return true;
-    }
+function rollCoord (grid: Dish, pos: Coord, dir: Direction) {
+  if (grid.tile(pos) !== Tile.Blank) {
     return false;
   }
-
-  rollUntilSettled(dir: { line: number; char: number }) {
-    let isSettled = false;
-    do {
-      isSettled = true;
-      for (let l = 0; l < this.lines; ++l) {
-        for (let c = 0; c < this.chars; ++c) {
-          const rolled = this.rollCoord(l, c, dir);
-          if (rolled) {
-            isSettled = false;
-          }
-        }
-      }
-    } while (!isSettled);
+  if (grid.tile(pos.add(dir)) === Tile.Roller) {
+    grid.setTile(pos, Tile.Roller);
+    grid.setTile(pos.add(dir), Tile.Blank);
+    return true;
   }
+  return false;
+}
 
-  cycle() {
-    const directions = {
-      north: { line: 1, char: 0 },
-      west: { line: 0, char: -1 },
-      south: { line: -1, char: 0 },
-      east: { line: 0, char: 1 },
-    };
-    this.rollUntilSettled(directions.north);
-    this.rollUntilSettled(directions.west);
-    this.rollUntilSettled(directions.south);
-    this.rollUntilSettled(directions.east);
-  }
-
-  spin(cycles: number) {
-    let progress = new ProgressBar(
-      "(((BRRRRRRRR))) [:bar] :percent :elapseds ETA :etas ",
-      {
-        total: cycles,
-        width: 30,
-      },
-    );
-
-    for (let i = 0; i < cycles; ++i) {
-      this.cycle();
-      progress.tick();
-    }
-  }
-
-  score() {
-    let score = 0;
-    for (let l = 0; l < this.lines; ++l) {
-      for (let c = 0; c < this.chars; ++c) {
-        if (this.tileAt(l, c) === Tile.Roller) {
-          score += this.lines - l;
+function rollUntilSettled (grid: Dish, dir: Direction) {
+  let isSettled = false;
+  do {
+    isSettled = true;
+    for (let l = 0; l < grid.lines; ++l) {
+      for (let c = 0; c < grid.chars; ++c) {
+        const rolled = rollCoord(grid, Coord.from(l, c), dir);
+        if (rolled) {
+          isSettled = false;
         }
       }
     }
-    return score;
+  } while (!isSettled);
+}
+
+function score (grid: Dish) {
+  let score = 0;
+  for (let l = 0; l < grid.lines; ++l) {
+    for (let c = 0; c < grid.chars; ++c) {
+      if (grid.tile(Coord.from(l, c)) === Tile.Roller) {
+        score += grid.lines - l;
+      }
+    }
+  }
+  return score;
+}
+
+function cycle (grid: Dish) {
+  rollUntilSettled(grid, Direction.up);
+  rollUntilSettled(grid, Direction.right);
+  rollUntilSettled(grid, Direction.down);
+  rollUntilSettled(grid, Direction.left);
+}
+
+function spin (grid: Dish, cycles: number) {
+  let progress = new ProgressBar(
+    "(((BRRRRRRRR))) [:bar] :percent :elapseds ETA :etas ",
+    {
+      total: cycles,
+      width: 30,
+    },
+  );
+
+  for (let i = 0; i < cycles; ++i) {
+    cycle(grid);
+    progress.tick();
   }
 }
 
 const part1 = (rawInput: string) => {
-  const grid = Grid.fromInput(rawInput);
+  const grid = UtilGrid.fromText<Tile>(rawInput, { repeats: false });
 
-  grid.rollUntilSettled({ line: 1, char: 0 });
+  rollUntilSettled(grid, Direction.down);
 
-  return grid.score();
+  return score(grid);
 };
 
 const part2 = (rawInput: string) => {
-  const grid = Grid.fromInput(rawInput);
+  const grid = UtilGrid.fromText<Tile>(rawInput, { repeats: false });
 
-  grid.spin(1000);
-  // let lastScore = 0;
-  // let score = 0;
-  // do {
-  //   grid.spin(100);
-  //   lastScore = score;
-  //   score = grid.score();
-  // } while (lastScore !== score);
+  let lastScore = 0;
+  let scoreNumber = 0;
+  do {
+    spin(grid, 111);
+    lastScore = scoreNumber;
+    scoreNumber = score(grid);
+    console.log(scoreNumber);
+  } while (lastScore !== scoreNumber);
 
-  return grid.score();
+  return scoreNumber;
 };
 
 run({
   part1: {
     tests: [
       {
-        input: `O....#....
+        input: `
+O....#....
 O.OO#....#
 .....##...
 OO.#O....O
@@ -151,7 +120,8 @@ O.#..O.#.#
   part2: {
     tests: [
       {
-        input: `O....#....
+        input: `
+O....#....
 O.OO#....#
 .....##...
 OO.#O....O
